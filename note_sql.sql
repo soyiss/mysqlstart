@@ -219,3 +219,93 @@ select job,avg(sal), count(*) from emp group by job order by job asc;
 select job,round(avg(sal), 1), count(*) from emp group by job order by job asc;
 -- 위의 결과에서 job은 직급으로, 급여 평균값은 평균급여로, 사원수 조회값은 사원수로 표현해서 조회
 select job as'직급' ,round(avg(sal), 1) as '평균급여', count(*) as'사원수'from emp group by job order by job asc;
+
+-- 20230329
+-- 부서별 그룹핑
+select deptno from emp group by deptno;
+select deptno, avg(sal) from emp group by deptno;
+-- 부서별 그룹핑하고 그 안에서 직급별 그룹핑
+select deptno, job, avg(sal) from emp group by deptno, job;
+select deptno, job, avg(sal) from emp group by job, deptno;
+select deptno, job, avg(sal) from emp group by deptno, job order by job asc;
+select deptno, job, avg(sal) from emp group by deptno, job order by deptno asc;
+-- 그룹핑한 결과에서 조건을 따지고 싶을때는
+-- having문법 적용  --> 그룹핑 했을때 적용되는 문법
+-- 부서, 직급별로 묶고 그 결과에서 평균급여가 2000 이상인 결과만 조회
+select deptno, job, avg(sal) from emp 
+						group by deptno, job 
+							having avg(sal) >= 2000 
+								order by deptno asc;
+-- 급여가 3000이하인 사원을 대상으로 위의 그룹핑 수행해서 평균급여가 2000이상인 사원만 조회 
+select deptno, job, avg(sal) from emp  
+					where sal <= 30000 							-- 순서 중요
+						group by deptno, job 
+							having avg(sal) >= 2000 
+								order by deptno asc;
+-- date 타입을 문자로 표현하기: date_format()
+-- 해당 데이터의 연도값만 뽑아서 볼수 있음
+select date_format(hiredate, '%Y') from emp;
+/*
+	연습문제
+	1. 부서별 평균급여, 최고급여, 최저급여, 사원수 조회(평균급여는 소수점 둘째자리에서 반올림)
+    2. 직급별 사원수 조회(단 3명 이상인 결과만 출력)
+    3. 연도별 입사한 사원수 조회(조회결과 : 연도(yyyy), 사원수)
+    3.1. 위의 결과에서 각 연도별로 부서별 입사한 사원수 조회(조회결과 : 연도(yyyy), 부서번호, 사원수)
+*/
+-- 1. 부서별 평균급여, 최고급여, 최저급여, 사원수 조회(평균급여는 소수점 둘째자리에서 반올림)
+select deptno as '부서번호', round(avg(sal),1) as '평균급여',max(sal) as '최고급여',min(sal) as '최저급여' ,  count(*) as '사원수' from emp group by deptno;
+--  2. 직급별 사원수 조회(단 3명 이상인 결과만 출력)
+select job , count(empno) from emp group by job having count(job) >= 3 ;
+-- 3. 연도별 입사한 사원수 조회(조회결과 : 연도(yyyy), 사원수)
+select date_format(hiredate, '%Y') as '입사년도' , count(empno) as '사원수' from emp 
+												group by date_format(hiredate, '%Y') ;
+--  3. 1. 위의 결과에서 각 연도별로 부서별 입사한 사원수 조회(조회결과 : 연도(yyyy), 부서번호, 사원수)
+select date_format(hiredate, '%Y') as '입사년도', deptno as '부서번호', count(empno) as '사원수' 	from emp 
+												group by date_format(hiredate, '%Y'), deptno;
+
+-- emp테이블이랑 dept 테이블은 deptno라는 컬럼이 둘다 있다 
+-- emp 테이블을 조회하는데 20번 부서가 어디 부서인지 같이 보고싶다 
+-- > 내부 조인 사용할 수 있다
+select * from emp;
+select * from dept;
+-- 외부조인
+-- 의미없는 연결,무의미한 정보 연결
+select * from emp, dept; -- 이렇게 하면 x
+-- 조인
+-- 공통 속성을 파악을해서 조건에 달아준다 
+-- 실제 두 테이블이 합쳐진게 아니라 내가 보고싶은 형식으로 보여준것(테이블의 내용이 변경되진 않음)
+select * from emp, dept where emp.deptno = dept.deptno;
+select * from emp e , dept d where e.deptno = d.deptno;
+select empno, ename, dname, loc from emp e , dept d where e.deptno = d.deptno;
+
+-- deptno를 select를 넣었더니 ambiguous(모호하다) 에러가 뜬다
+-- 이유는? dept 컬럼은 emp에도있고 dept에도 있어서 어디 테이블의 deptno를 보여달라는건지 모호하다고 에러가 뜬다 
+select empno, ename, deptno, dname, loc from emp e , dept d where e.deptno = d.deptno; 
+-- 각각의 테이블의 소속을 명확하게 밝혀주면 에러가 뜨지 않는다 
+-- 조인 후 emp 테이블만 조회
+select e.* from emp e, dept d where e.deptno = e.deptno;
+-- emp, dept를 조인하여 empno, ename, deptno, dname, loc조회
+-- (단, 급여가 2500 이상인 사원만 조회하고, 조회결과는 사원이름 기준으로 오름차순 정렬해라)
+select e.empno, e.ename, e.deptno, d.dname, d.loc from emp e , dept d 
+				where e.deptno = d.deptno and e.sal >= 2500 order by e.ename asc; 
+                
+-- 최저 급여를 받는 사람이 누구인가?
+select * from emp order by sal asc ;
+-- 1. 최저급여 값이 얼마인지
+select min(sal) from emp; 
+-- 2. 최저급여 값을 받는 사람이(최저급여 값과 sal값이 일치하는) 누구인지 조회
+select * from emp where sal = 800; 
+-- 원래는 두번의 과정을 수행해야만 최저급여 받는 사람이 누구인지를 알수있다
+
+-- 서브쿼리 적용
+select * from emp where sal = (select min(sal) from emp); 
+-- 연습 
+-- 최고 급여를 받는 사원 정보 조회
+select * from emp where sal = (select max(sal) from emp); 
+
+-- allen 의 급여값
+select sal from emp where ename = 'allen'; 
+select sal from emp where sal> 1600;
+
+-- allen 보다 높은 급여를 받는 사원 조회 (allen의 급여는 1600)
+select * from emp where sal > (select sal from emp where ename = 'allen');
