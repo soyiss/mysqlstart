@@ -454,7 +454,257 @@ create table member8(
     member_created_date datetime default now(),  
     constraint pk_member8 primary key(id)  -- id 컬럼에 pk를 지정하겠다
 );
+insert into member8(id, member_email, member_password) values(6,'member2@email.com','1111');
+insert into member8(id, member_email, member_password) values(7,'member3@email.com','1111');
+
+select * from member8;
 
 -- 제약 조건 확인
 select * from information_schema.table_constraints;
 
+-- 참조관계
+-- 게시판과 댓글의 관계
+
+drop table board1; -- 테이블 삭제 -- 만들지 않은 테이블이면 오류가 뜬다 
+drop table if exists board1; -- 경고가 뜨게 함  
+-- 보통 이 문장으로 많이 쓴다 이유는 테이블 만들기 전에 drop를 먼저해라 있든 없든 혹시나 모르니까 미리 깔금하게 지우고 가자 하는데 테이블 여러개를 한방에 만드는데
+-- if exists를 안쓰고 drop하면 에러가 떠서 그냥 멈춰 버리니깐 if exists를 쓰는게 훨씬 안전하다 (에러를 줄인다)
+-- 보통 테이블을 만들기 전에 드랍을 먼저 쓴다(테이블을 만들고 전체 실행 할때 드랍도 포함될수 있으니까 위에다가 씀)
+
+-- 부모 테이블
+create table board1(
+	id bigint, -- 글번호
+    board_writer varchar(20) not null, -- 작성자 unique를 걸면 한명의 작성자는 하나의 글밖에 못써서 붙이면 안됨
+    board_contents varchar(500), -- 내용
+    constraint pk_board1 primary key(id)
+);
+
+-- 댓글 테이블: 댓글은 존재하는 게시글에만 작성 가능하며,
+-- 게시글의 글번호(id)를 참조하는 관계로 정의
+drop table if exists comment1;
+
+-- 자식 테이블
+create table comment1(
+	id bigint, -- 댓글번호
+    comment_writer varchar(20) not null, -- 댓글 작성자 
+    comment_contents varchar(200), -- 댓글 내용
+    board1_id bigint, -- 어떤 게시글의 작성된 댓글인지 글번호 정보가 필요함
+    
+    -- 댓글테이블(comment1)의 pk지정
+    constraint pk_comment1 primary key(id),
+    
+    -- 참조관계 지정을 위해 comment1 테이블의 board1_id 컬럼을
+    -- board1 테이블의 id 컬럼을 참조하는 관계로 정의함 
+    -- 이 문장으로 인해 부모 자식 관계가 맺어질 수 있음 문장 꼭 필요!
+    -- references 뒤에는 board1(id) 는 참조대상이다  테이블이름(컬럼이름)
+    constraint fk_comment1 foreign key(board1_id) references board1(id)
+);
+
+-- 참조관계를 만들고 부모테이블을 지우려고하면 에러가 뜬다
+-- 자식 테이블을 먼저 지우고 부모 테이블을 지워야된다 
+-- 나중에는 자식이있더라고 부모를 지울수 있는 옵션이 있지만 아직 안배움 
+
+-- 보드 데이터 추가
+insert into board1(id, board_writer, board_contents)
+	values(1,'writer1','contents1');
+insert into board1(id, board_writer, board_contents)
+	values(2,'writer2','contents2');
+insert into board1(id, board_writer, board_contents)
+	values(3,'writer3','contents3');
+insert into board1(id, board_writer, board_contents)
+	values(4,'writer4','contents4');
+select * from board1;
+
+-- 댓글 데이터 추가
+
+-- board1_id컬럼에 들어가는 값은 어떤 게시글에 댓글을 쓸것인가이다 
+-- 참조하는 컬럼에 들어가는 데이터는 부모 테이블에 있는 값만 사용이 가능하다는 얘기!!(중요☆)
+
+-- 1번 게시글에 대한 댓글
+insert into comment1(id, comment_writer, comment_contents, board1_id)
+	values(1,'c writer1','c contents1',1);
+    
+-- 1번 게시글에 대한 2번째 댓글 (1번째 댓글의 작성자랑 동일)
+-- id는 pk라 동일하게 할수가 없다(댓글번호)
+
+insert into comment1(id, comment_writer, comment_contents, board1_id)
+	values(2,'c writer1','c contents2',1);
+    
+-- 1번 게시글에 대한 3번째 댓글 
+insert into comment1(id, comment_writer, comment_contents, board1_id)
+	values(3,'c writer2','c contents3',1);
+    
+-- 2번 게시글에 대한 댓글
+insert into comment1(id, comment_writer, comment_contents, board1_id)
+	values(4,'c writer3','c contents3',2);
+    
+-- 5번 게시글에 대한 댓글 (5번 게시글이 없으니깐 에러가 뜰것임)
+insert into comment1(id, comment_writer, comment_contents, board1_id)
+	values(5,'c writer3','c contents3',5);
+    
+select * from comment1;
+
+select * from board1;
+-- 부모 데이터 삭제
+-- 1,2번 게시글에는 댓글이 있고, 3,4번 게시글에는 댓글이 없는 상황에서..부모 데이터 삭제해보자 
+
+-- select, delete, update를 사용 할 땐  where절을 많이 쓰게 됨(보통 조건에 pk값으로 달아야함)
+
+-- 3번 게시글 삭제
+delete from board1 where id = 3; -- 자식값(댓글)이 안달려있으니깐 삭제가 가능하다
+-- 2번 게시글 삭제
+delete from board1 where id = 2; -- 데이터들도 부모 자식 관계가 맺어져서 삭제가 불가능하다 /자식 데이터 부터 삭제해야 가능함 
+
+-- 2번 게시글에 작성된 댓글 삭제(댓글번호 3번 데이터)
+-- 댓글을 삭제 후 게시글을 삭제하는것은 가능하다!
+delete from comment1 where id = 4;
+
+-- 부모 데이터 삭제시 자식 데이터도 함께 삭제
+-- 부모테이블 생성
+drop table if exists board2;
+create table board2(
+	id bigint,
+    board_writer varchar(20) not null,
+    board_contents varchar(500),
+    constraint pk_board2 primary key(id)
+);
+
+-- 자식 테이블 생성
+drop table if exists comment2;
+create table comment2(
+	id bigint, 
+    comment_writer varchar(20) not null, 
+    comment_contents varchar(200), 
+    board2_id bigint, 
+
+    constraint pk_comment2 primary key(id),
+	-- on delete cascade: 부모데이터 삭제 시 자식데이터 함께 삭제되는 특징이있다
+    constraint fk_comment2 foreign key(board2_id) references board2(id) on delete cascade
+);
+/* 문제
+ 게시글 4개 작성
+ 1,2번 게시글에 댓글 작성
+ 3번 게시글 삭제
+ 2번 게시글 삭제
+*/
+
+-- 게시글 4개 작성
+insert into board2(id, board_writer, board_contents)
+	values(1, 'writer 1', 'contents 1');
+insert into board2(id, board_writer, board_contents)
+	values(2, 'writer 2', 'contents 2');
+insert into board2(id, board_writer, board_contents)
+	values(3, 'writer 3', 'contents 3');
+insert into board2(id, board_writer, board_contents)
+	values(4, 'writer 4', 'contents 4');
+
+select * from board2;
+
+-- 1,2번 게시글에 댓글 작성
+insert into comment2(id, comment_writer, comment_contents, board2_id)
+	values(1, 'c writer 1', 'c contents 1',1);
+insert into comment2(id, comment_writer, comment_contents, board2_id)
+	values(2, 'c writer 2', 'c contents 2',2);
+select * from comment2;
+
+-- 3번 게시글 삭제
+delete from board2 where id = 3;
+select * from board2;
+
+-- 2번 게시글 삭제
+-- 테이블을 생성 했을 때 on delete cascade속성을 사용해서 댓글이 달린 게시글이어도 같이 삭제가되서 에러가 뜨지 않음 
+-- on delete cascade는 데이터에 대해서 삭제하는 옵션이다.(테이블 삭제 아님)
+delete from board2 where id = 2;
+select * from board2;
+select * from comment2;
+
+-- on deletee set null
+
+-- 부모 테이블 생성
+drop table if exists board3;
+create table board3(
+	id bigint,
+    board_writer varchar(20) not null,
+    board_contents varchar(500),
+    constraint pk_board3 primary key(id)
+);
+
+-- 자식 테이블 생성
+drop table if exists comment3;
+create table comment3(
+	id bigint, 
+    comment_writer varchar(20) not null, 
+    comment_contents varchar(200), 
+    board3_id bigint, 
+
+    constraint pk_comment3 primary key(id),
+	-- on delete set null: 자식 데이터는 유지되지만 참조 컬럼은 null로 바뀜 
+    constraint fk_comment3 foreign key(board3_id) references board3(id) on delete set null
+);
+/* 문제
+ 게시글 4개 작성
+ 1,2번 게시글에 댓글 작성
+ 3번 게시글 삭제
+ 2번 게시글 삭제
+*/
+
+-- 게시글 4개 작성
+insert into board3(id, board_writer, board_contents)
+	values(1, 'writer 1', 'contents 1');
+insert into board3(id, board_writer, board_contents)
+	values(2, 'writer 2', 'contents 2');
+insert into board3(id, board_writer, board_contents)
+	values(3, 'writer 3', 'contents 3');
+insert into board3(id, board_writer, board_contents)
+	values(4, 'writer 4', 'contents 4');
+
+select * from board3;
+
+-- 1,2번 게시글에 댓글 작성
+insert into comment3(id, comment_writer, comment_contents, board3_id)
+	values(1, 'c writer 1', 'c contents 1',1);
+    insert into comment3(id, comment_writer, comment_contents, board3_id)
+	values(2, 'c writer 2', 'c contents 2',1);
+insert into comment3(id, comment_writer, comment_contents, board3_id)
+	values(3, 'c writer 3', 'c contents 3',2);
+select * from comment3;
+
+-- 3번 게시글 삭제
+delete from board3 where id = 3;
+select * from board3;
+
+-- 2번 게시글 삭제
+-- on delete set null : 부모 테이블을 삭제해서 자식 테이블의 board3_id의 번호가 null이 뜬다
+-- 예시) 블로그 작성후 회원이 탈퇴하면 블로그 글은 남아있는데 회원은 회원탈퇴되었다고 하는 경우 
+delete from board3 where id = 2;
+select * from board3;
+select * from comment3;
+
+-- 수정 쿼리
+-- 1번 게시글 내용을 안녕하세요로 수정
+select * from board3;
+update board3 set board_contents = '안녕하세요' where id = 1;
+
+-- 4번 게시글 작성자를 작성자4, 내용을 곧 점심시간 으로 수정
+-- 여러개의 컬럼을 같이 수정할 때는 and가 아닌 쉼표로 쓴다!
+-- (여러개의 조건을 정할 땐 and, or을 사용)
+update board3 set board_writer='작성자4' , board_contents = '곧 점심시간' where id = 4;
+
+-- id 컬럼에 자동 번호 적용하기 
+-- id 컬럼은 데이터를 추가할때마다 하나씩 값이 올라가는 컬럼이니깐,,
+drop table if exists board4;
+create table board4(
+	id bigint auto_increment,
+    board_writer varchar(20) not null,
+    board_contents varchar(500),
+    -- auto_increment를 적용하고 싶으면 그 해당 컬럼은 pk로 지정이 되야된다!
+	constraint pk_board4 primary key(id)
+);
+
+-- id컬럼에 값을 입력하지 않아도 데이터를 추가할 떄 순차적으로 값이 적용된다
+insert into board4(board_writer, board_contents)
+	values('writer 1', 'contents 1');
+insert into board4(board_writer, board_contents)
+	values('writer 2', 'contents 2');
+    
+select * from board4;
