@@ -708,3 +708,405 @@ insert into board4(board_writer, board_contents)
 	values('writer 2', 'contents 2');
     
 select * from board4;
+
+
+
+
+
+-- --------- 오후 수업 -----------
+drop table if exists book;
+create table book(
+	id bigint auto_increment,
+    b_bookname varchar(20) not null,
+    b_publisher varchar(50) not null,
+    b_price bigint,
+	constraint pk_book primary key(id)
+);
+
+drop table if exists customer;
+create table customer(
+	id bigint auto_increment,
+    c_name varchar(20) not null,
+    c_address varchar(50) not null,
+    c_phone varchar(20),
+	constraint pk_customer primary key(id)
+);
+
+drop table if exists orders;
+create table orders(
+	id bigint auto_increment,
+    customer_id bigint,
+    book_id bigint,
+    o_saleprice bigint,
+    o_orderdate date,
+	constraint pk_orders primary key(id),
+    -- constraint 뒤에 쓰는 제약조건 이름은 중복되면 안된다 
+    constraint fk_orders_b foreign key(book_id) references book(id),
+    constraint fk_orders_c foreign key(customer_id) references customer(id)
+);
+
+insert into book(b_bookname, b_publisher, b_price)
+	values('축구의 역사', '굿스포츠',7000);
+insert into book(b_bookname, b_publisher, b_price)
+	values('축구스카우팅 리포트', '나무수',13000);
+insert into book(b_bookname, b_publisher, b_price)
+	values('축구의 이해', '대한미디어',22000);
+insert into book(b_bookname, b_publisher, b_price)
+	values('배구 바이블', '대한미디어',35000);
+insert into book(b_bookname, b_publisher, b_price)
+	values('피겨 교본', '굿스포츠',8000);
+insert into book(b_bookname, b_publisher, b_price)
+	values('피칭 단계별기술', '굿스포츠',6000);
+insert into book(b_bookname, b_publisher, b_price)
+	values('야구의 추억', '이상미디어',20000);
+insert into book(b_bookname, b_publisher, b_price)
+	values('야구를 부탁해', '이상미디어',13000);
+insert into book(b_bookname, b_publisher, b_price)
+	values('올림픽 이야기', '삼성당',7500);
+insert into book(b_bookname, b_publisher, b_price)
+	values('olympic champions', 'pearson',13000);
+
+select * from book;
+
+insert into customer(c_name, c_address, c_phone)
+	values('손흥민', '영국 런던','000-5000-0001');
+insert into customer(c_name, c_address, c_phone)
+	values('김연아', '대한민국 서울','000-6000-0001');
+insert into customer(c_name, c_address, c_phone)
+	values('김연경', '중국 상하이','000-7000-0001');
+insert into customer(c_name, c_address, c_phone)
+	values('류현진', '캐나다 토론토','000-8000-0001');
+insert into customer(c_name, c_address, c_phone)
+	values('이강인', '스페인 마요르카',null);
+    
+select * from customer;
+
+insert into orders(customer_id, book_id, o_saleprice, o_orderdate)
+	values(1, 1,6000,str_to_date('2021-07-01','%Y-%m-%d'));
+insert into orders(customer_id, book_id, o_saleprice, o_orderdate)
+	values(1, 3,21000,str_to_date('2021-07-03','%Y-%m-%d'));
+insert into orders(customer_id, book_id, o_saleprice, o_orderdate)
+	values(2, 5,8000,str_to_date('2021-07-03','%Y-%m-%d'));
+insert into orders(customer_id, book_id, o_saleprice, o_orderdate)
+	values(3, 6,6000,str_to_date('2021-07-04','%Y-%m-%d'));
+insert into orders(customer_id, book_id, o_saleprice, o_orderdate)
+	values(4, 7,20000,str_to_date('2021-07-05','%Y-%m-%d'));
+insert into orders(customer_id, book_id, o_saleprice, o_orderdate)
+	values(1, 2,12000,str_to_date('2021-07-07','%Y-%m-%d'));
+insert into orders(customer_id, book_id, o_saleprice, o_orderdate)
+	values(4, 8,13000,str_to_date('2021-07-07','%Y-%m-%d'));
+insert into orders(customer_id, book_id, o_saleprice, o_orderdate)
+	values(3, 10,12000,str_to_date('2021-07-08','%Y-%m-%d'));
+insert into orders(customer_id, book_id, o_saleprice, o_orderdate)
+	values(2, 10,7000,str_to_date('2021-07-09','%Y-%m-%d'));
+insert into orders(customer_id, book_id, o_saleprice, o_orderdate)
+	values(3, 8,13000,str_to_date('2021-07-10','%Y-%m-%d'));
+
+select * from orders;
+
+-- 1. 모든 도서의 가격과 도서명 조회 
+select b_bookname, b_price from book;
+
+-- 2. 모든 출판사 이름 조회 
+select b_publisher from book;
+
+-- 2.1 중복값을 제외한 출판사 이름 조회 
+select distinct b_publisher from book;
+
+-- 3. BOOK테이블의 모든 내용 조회 
+select * from book;
+
+-- 4. 20000원 미만의 도서만 조회 
+select * from book where b_price < 20000;
+
+-- 5. 10000원 이상 20000원 이하인 도서만 조회
+select * from book where b_price >= 10000 and b_price <= 20000;
+select * from book where b_price between 10000 and 20000;
+
+-- 6. 출판사가 굿스포츠 또는 대한미디어인 도서 조회 
+select * from book where b_publisher = '굿스포츠' or b_publisher = '대한미디어';
+select * from book where b_publisher in('굿스포츠','대한미디어');
+
+-- 7. 도서명에 축구가 포함된 모든 도서를 조회
+select * from book where b_bookname  like '%축구%';
+
+-- 8. 도서명의 두번째 글자가 구인 도서 조회
+select * from book where b_bookname  like '_구%';
+
+-- 9. 축구 관련 도서 중 가격이 20000원 이상인 도서 조회
+select * from book where b_price >= 20000 and b_bookname like '%축구%';
+
+-- 10. 책 이름순으로 전체 도서 조회
+select * from book order by b_bookname asc;
+select * from book order by b_bookname desc;
+
+-- 11. 도서를 가격이 낮은 것 부터 조회하고 같은 가격일 경우 도서명을 가나다 순으로 조회
+select * from book order by b_price asc, b_bookname asc;
+
+-- 12. 주문 도서의 총 판매액 조회 
+use db_dbclass;
+select sum(o_saleprice) from orders;
+-- 13. 1번 고객이 주문한 도서 총 판매액 조회 
+select sum(o_saleprice) from orders where customer_id = 1;
+-- 14. ORDERS 테이블로 부터 평균판매가, 최고판매가, 최저판매가 조회 
+select avg(o_saleprice), max(o_saleprice), min(o_saleprice) from orders;
+-- 15. 고객별로 주문한 도서의 총 수량과 총 판매액 조회
+select customer_id, count(id), sum(o_saleprice) from orders group by customer_id;
+-- 16. 가격이 8,000원 이상인(그룹바이 하기전 where 조건) 도서를 구매한 고객에 대해 고객별 주문 도서의 총 수량 조회 (GROUP BY 활용)
+--    (단, 8,000원 이상 도서 두 권 이상(having사용) 구매한 고객만) 
+-- 8000원 이상 도서 두권 이상 구매한 고객만 고객별 주문 도서의 총 수량을 조회해라 (8000원 이하는 포함하지 않음)
+select customer_id, count(id) from orders where o_saleprice >= 8000 group by customer_id having count(*) >= 2;
+-- 17. 김연아고객(고객번호 : 2) 총 구매액
+select sum(o_saleprice) from orders where customer_id = 2;
+-- 18. 김연아 고객이 구매한 도서의 수
+select count(id) from orders where customer_id = 2;
+-- 19. 서점에 있는 도서의 총 권수
+select count(id) from book;
+-- 20. 출판사의 총 수 
+select b_publisher from book; 
+select distinct b_publisher from book;
+select count(distinct b_publisher) as '출판사 개수' from book;
+-- 21. 7월 4일 ~ 7일 사이에 주문한 도서의 주문번호 조회 
+select * from orders where o_orderdate between '2021-07-04' and '2021-07-07';
+select * from orders where o_orderdate >= '2021-07-04' and  o_orderdate <= '2021-07-07';
+select * from orders where o_orderdate >= str_to_date('2021-07-04','%Y-%m-%d') and  o_orderdate <= str_to_date('2021-07-07','%Y-%m-%d');
+-- 22. 7월 4일 ~ 7일 사이에 주문하지 않은 도서의 주문번호 조회
+select * from orders where o_orderdate not between '2021-07-04' and '2021-07-07';
+select * from orders where o_orderdate < '2021-07-04' or  o_orderdate >'2021-07-07';
+select * from orders where o_orderdate < str_to_date('2021-07-04','%Y-%m-%d') or  o_orderdate > str_to_date('2021-07-07','%Y-%m-%d');
+
+-- 23. 고객, 주문 테이블 조인하여 고객번호 순으로 정렬
+select * from customer c, orders o where c.id = o.customer_id order by c.id , o.id;
+select * from customer c inner join orders o on c.id = o.customer_id order by c.id , o.id;
+
+-- 24. 고객이름(CUSTOMER), 고객이 주문한 도서 가격(ORDERS) 조회 
+select c.c_name, o.o_saleprice from customer c, orders o where c.id = o.customer_id;
+
+-- 25. 고객별(GROUP)로 주문한 도서의 총 판매액(SUM)과 고객이름을 조회하고 조회 결과를 가나다 순으로 정렬 
+select c.c_name ,sum(o.o_saleprice) from customer c, orders o 
+								where c.id = o.customer_id group by customer_id order by c.c_name;
+
+-- 26. 고객명과 고객이 주문한 도서명을 조회(3테이블 조인)
+select c.c_name, b.b_bookname from customer c, book b, orders o 
+								where c.id = o.customer_id and b.id = o.book_id;
+
+-- 27. 2만원(SALEPRICE) 이상 도서를 주문한 고객의 이름과 도서명을 조회 
+select c.c_name, b.b_bookname from customer c, book b, orders o 
+								where c.id = o.customer_id and b.id = o.book_id and o.o_saleprice >= 20000;
+
+-- 28. 손흥민 고객의 총 구매액과 고객명을 함께 조회
+select c.c_name,sum(o.o_saleprice) from customer c, orders o 
+								where c.id = o.customer_id and c.c_name ='손흥민';
+
+-- 29. 손흥민 고객의 총 구매수량과 고객명을 함께 조회
+select c.c_name,count(*) from customer c, orders o 
+								where c.id = o.customer_id and c.c_name ='손흥민';
+
+-- 30. 가장 비싼 도서의 이름을 조회 
+select * from book order by b_price desc;
+select max(b_price) from book;
+select b_bookname from book where b_price = 35000;
+select b_bookname from book where b_price = (select max(b_price) from book);
+
+-- 30추가문제. 구매한 책들중 가장 비싼 책 이름을 조회해라 
+select * from orders;
+select max(o_saleprice) from orders; -- (3번책)가장 비싼 책 가격
+select * from book; -- 3번 책은 축구의 이해
+select b.b_bookname from book b, orders o 
+					where b.id = o.book_id 
+							and o.o_saleprice = (select max(o_saleprice) from orders);
+
+-- 31. 책을 구매한 이력이 있는 고객의 이름을 조회
+select c_name from customer where id=1 or id=2 or id=3 or id=4;
+select c_name from customer where id in(1,2,3,4);
+select c_name from customer where id in(select customer_id from orders);
+select distinct c_name from customer c, orders o where c.id = o.customer_id;
+
+-- 32. 도서의 가격(PRICE)과 판매가격(SALEPRICE)의 차이가 가장 많이 나는 주문 조회 
+select * from orders;
+select * from book;
+select b.b_price - o.o_saleprice from book b, orders o where b.id = o.book_id; -- 차이
+select max(b.b_price - o.o_saleprice) from book b, orders o where b.id = o.book_id; -- 가장 큰 차이 
+select * from book b, orders o where b.id = o.book_id 
+	and b.b_price - o.o_saleprice = 
+					(select max(b.b_price-o.o_saleprice) from book b, orders o where b.id = o.book_id);
+
+-- 33. 주문목록 고객별 평균 구매 금액이 / 주문목록 도서의 판매 평균 금액 보다 높은 고객의 이름 조회 
+select avg(o_saleprice) from orders; -- 전체 주문 평균 판매금액 11800원
+select c.c_name , avg(o_saleprice) from customer c , orders o where c.id = o.customer_id group by c.c_name; -- 고객별 평균 구매금액
+
+select c.c_name from customer c, book b, orders o 
+		where c.id = o.customer_id and b.id = o.book_id 
+				group by c.c_name 
+						having avg(o_saleprice) > (select avg(o_saleprice) from orders);
+
+-- 34. 고객번호가 5인 고객의 주소를 대한민국 인천으로 변경 
+update customer set c_address = '대한민국 인천' where id = 5;
+select * from customer;
+
+-- 35. 김씨 성을 가진 고객이 주문한 총 판매액 조회
+select c.c_name, o.o_saleprice from customer c, book b, orders o where c.id = o.customer_id and b.id = o.book_id;
+select id from customer where c_name like '김%';
+select sum(o_saleprice) from orders where customer_id=2 or customer_id =3;
+select sum(o_saleprice) from  orders where customer_id in(2,3);
+select sum(o_saleprice) from orders where customer_id in(select id from customer where c_name like '김%');
+select sum(o.o_saleprice) from customer c, book b, orders o
+		where c.id = o.customer_id and b.id = o.book_id and c.c_name like '김%';
+        
+ -- 테이블 구조 변경(alter)
+ -- create로 만든건 alter로 수정하고 drop로 지운다!
+ create table student(
+	id bigint,
+    s_name varchar(20),
+    s_mobile int
+ );
+-- 기존 컬럼에 제약조건을 추가하려면
+alter table student add constraint primary key(id);
+desc student;
+-- 기존 컬럼에 타입을 변경하려면
+alter table student modify s_mobile varchar(30);
+-- 새로운 컬럼 추가하려면
+alter table student add s_major varchar(30);
+-- 컬럼 이름 변경하려면
+alter table student change s_mobile s_phone varchar(30);
+-- 컬럼 삭제하려면
+alter table student drop s_major;
+
+-- alter을 쓰기도 하지만 그냥 새로운 테이블을 만드는게 훨 깔끔
+
+
+
+
+-- ------------ 연습 문제----------------
+-- member_table 테이블 (회원정보 테이블)
+drop table if exists member_table;
+create table member_table(
+	id bigint auto_increment,
+    member_emall varchar(50) not null unique,
+    member_name varchar(20) not null,
+    member_password varchar(20) not null,
+    constraint pk_member_table primary key(id)
+);
+
+-- category_table 테이블 (카테고리 테이블)
+drop table if exists category_table;
+create table category_table(
+	id bigint auto_increment,
+    category_name varchar(20) not null unique,
+    constraint pk_category_table primary key(id)    
+);
+
+-- board_table 테이블 (게시판 테이블)
+drop table if exists board_table;
+create table board_table(
+	id bigint auto_increment,
+    board_title varchar(50) not null,
+    board_writer varchar(20) not null, -- 사용자가 로그인한 입력값
+    board_contents varchar(500),
+    board_hits int default 0, -- 조회수
+    board_created_time datetime default now(),
+    board_updated_time datetime on update now(), -- 게시글에 최종 수정시간 
+-- 게시글을 처음 쓸땐 null , 게시글에 수정이 발생하면 수정시간을 기록함
+-- on update : 업데이트가 발생 했을때 그 현재 시간을 기록하라는 명령 
+    board_file_attached int default 0, -- 파일 첨부여부
+    -- 파일 첨부여부를 따져서 나중에 화면 출력에서 차이를 보여줄수 있음(스프링이랑 연결할 때 배운다)
+    member_id bigint,
+    category_id bigint,
+    
+    constraint pk_board_table primary key(id),   
+    -- constraint 뒤에 쓰는 제약조건 이름은 중복되면 안된다 
+    constraint fk_board_table_m foreign key(member_id) references member_table(id) on delete cascade, -- 부모 삭제하면 자식도 함께 삭제
+    constraint fk_board_table_c foreign key(category_id) references category_table(id) on delete set null -- 부모 삭제해도 자식 null뜨게끔
+);
+
+-- board_file_table 테이블 (첨부 파일 테이블)
+-- 실제 파일이 db에 담기는게 아니고 별도 공간에 저장을 하고 db에는 해당 파일의 이름만 저장을한다 
+drop table if exists board_file_table;
+create table board_file_table(
+	id bigint auto_increment,
+    original_file_name varchar(100), -- 사용자가 업로드한 파일의 이름
+    stored_file_name varchar(100), -- 관리용 파일 이름(파일이름 생성 로직은 backend에서)
+    -- 예를 들어, 증명사진.jpg를 올렸다 라고 한다면  15615491216844841651-중명사진.jpg 아무수나 붙여서 파일이름으로 정해서 저장한다 
+    -- 만약 사용자가 다시 파일을 볼땐 사용자가 올렸던 파일이름 증명사진.jpg만 보여진다
+	board_id bigint,
+    
+    constraint pk_board_file_table primary key(id),
+    constraint fk_board_file_table foreign key(board_id) references board_table(id) on delete cascade
+);
+
+-- comment_table 테이블(댓글 테이블)
+drop table if exists comment_table;
+create table comment_table(
+	id bigint auto_increment,
+    comment_writer varchar(20) not null,
+    comment_contents varchar(200) not null,
+    comment_created_time datetime default now(),
+    board_id bigint, -- 어떤 게시글에 쓰여지는지
+    member_id bigint, -- 누가 댓글을 쓰는건지 두가지를 동시에 참조해야된다
+    constraint pk_comment_table primary key(id),
+    constraint fk_comment_table_b foreign key(board_id) references board_table(id) on delete cascade,
+    constraint fk_comment_table_m foreign key(member_id) references member_table(id) on delete cascade
+);
+
+-- good_table 테이블( 좋아요 테이블)
+drop table if exists good_table;
+create table good_table(
+	id bigint auto_increment,
+    comment_id bigint, -- 어떤 댓글에 좋아요를 했나
+    member_id bigint, -- 누가 좋아요를 눌렀나 
+    constraint pk_good_table primary key(id),
+    constraint fk_good_table_c foreign key(comment_id) references comment_table(id) on delete cascade,
+    constraint fk_good_table_m foreign key(member_id) references member_table(id) on delete cascade
+);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
